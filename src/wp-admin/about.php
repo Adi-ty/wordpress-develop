@@ -181,7 +181,7 @@ require_once ABSPATH . 'wp-admin/admin-header.php';
 			</div>
 			<div class="column aligncenter">
 				<div class="about__image">
-					<a href="<?php echo esc_url( __( 'https://wordpress.org/download/releases/6-8/' ) ); ?>" class="button button-primary button-hero"><?php _e( 'See everything new' ); ?></a>
+					<a href="<?php echo esc_url( __( 'https://wordpress.org/download/releases/6-8/' ) ); ?>" target="_blank" rel="noopener" class="button button-primary button-hero"><?php _e( 'See everything new' ); ?></a>
 				</div>
 			</div>
 		</div>
@@ -206,7 +206,7 @@ require_once ABSPATH . 'wp-admin/admin-header.php';
 					<?php
 					printf(
 						/* translators: 1: Learn WordPress link, 2: Workshops link. */
-						__( '<a href="%1$s">Learn WordPress</a> is a free resource for new and experienced WordPress users. Learn is stocked with how-to videos on using various features in WordPress, <a href="%2$s">interactive workshops</a> for exploring topics in-depth, and lesson plans for diving deep into specific areas of WordPress.' ),
+						__( '<a href="%1$s" target="_blank" rel="noopener">Learn WordPress</a> is a free resource for new and experienced WordPress users. Learn is stocked with how-to videos on using various features in WordPress, <a href="%2$s" target="_blank" rel="noopener">interactive workshops</a> for exploring topics in-depth, and lesson plans for diving deep into specific areas of WordPress.' ),
 						'https://learn.wordpress.org/',
 						'https://learn.wordpress.org/online-workshops/'
 					);
@@ -224,7 +224,7 @@ require_once ABSPATH . 'wp-admin/admin-header.php';
 					</svg>
 				</div>
 				<h4 style="margin-top: calc(var(--gap) / 2); margin-bottom: calc(var(--gap) / 2);">
-					<a href="<?php echo esc_url( $release_notes_url ); ?>">
+					<a href="<?php echo esc_url( $release_notes_url ); ?>" target="_blank" rel="noopener">
 						<?php
 						printf(
 							/* translators: %s: WordPress version number. */
@@ -251,7 +251,7 @@ require_once ABSPATH . 'wp-admin/admin-header.php';
 					</svg>
 				</div>
 				<h4 style="margin-top: calc(var(--gap) / 2); margin-bottom: calc(var(--gap) / 2);">
-					<a href="<?php echo esc_url( $field_guide_url ); ?>">
+					<a href="<?php echo esc_url( $field_guide_url ); ?>" target="_blank" rel="noopener">
 						<?php
 						printf(
 							/* translators: %s: WordPress version number. */
