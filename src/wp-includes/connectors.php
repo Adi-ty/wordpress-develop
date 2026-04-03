@@ -60,6 +60,8 @@ function wp_is_connector_registered( string $id ): bool {
  *
  *         @type string $file The plugin's main file path relative to the plugins
  *                            directory (e.g. 'akismet/akismet.php' or 'hello.php').
+ *         @type callable $is_active Optional callback to determine whether the plugin
+ *                                   is active. Receives no arguments and must return bool.
  *     }
  * }
  * @phpstan-return ?array{
@@ -75,7 +77,8 @@ function wp_is_connector_registered( string $id ): bool {
  *         env_var_name?: non-empty-string
  *     },
  *     plugin?: array{
- *         file: non-empty-string
+	 *         file: non-empty-string,
+	 *         is_active?: callable(): bool
  *     }
  * }
  */
@@ -121,6 +124,8 @@ function wp_get_connector( string $id ): ?array {
  *
  *             @type string $file The plugin's main file path relative to the plugins
  *                                directory (e.g. 'akismet/akismet.php' or 'hello.php').
+ *             @type callable $is_active Optional callback to determine whether the plugin
+ *                                       is active. Receives no arguments and must return bool.
  *         }
  *     }
  * }
@@ -137,7 +142,8 @@ function wp_get_connector( string $id ): ?array {
  *         env_var_name?: non-empty-string
  *     },
  *     plugin?: array{
- *         file: non-empty-string
+	 *         file: non-empty-string,
+	 *         is_active?: callable(): bool
  *     }
  * }>
  */
@@ -218,7 +224,10 @@ function _wp_connectors_init(): void {
 			'description'    => __( 'Protect your site from spam.' ),
 			'type'           => 'spam_filtering',
 			'plugin'         => array(
-				'file' => 'akismet/akismet.php',
+				'file'      => 'akismet/akismet.php',
+				'is_active' => static function (): bool {
+					return defined( 'AKISMET_VERSION' ) && class_exists( 'Akismet', false );
+				},
 			),
 			'authentication' => array(
 				'method'          => 'api_key',
@@ -692,9 +701,15 @@ function _wp_connectors_get_connector_script_module_data( array $data ): array {
 		);
 
 		if ( ! empty( $connector_data['plugin']['file'] ) ) {
-			$file         = $connector_data['plugin']['file'];
-			$is_installed = file_exists( wp_normalize_path( WP_PLUGIN_DIR . '/' . $file ) );
-			$is_activated = $is_installed && is_plugin_active( $file );
+			$file = $connector_data['plugin']['file'];
+
+			if ( ! empty( $connector_data['plugin']['is_active'] ) && is_callable( $connector_data['plugin']['is_active'] ) ) {
+				$is_activated = (bool) call_user_func( $connector_data['plugin']['is_active'] );
+				$is_installed = $is_activated;
+			} else {
+				$is_installed = file_exists( wp_normalize_path( WP_PLUGIN_DIR . '/' . $file ) );
+				$is_activated = $is_installed && is_plugin_active( $file );
+			}
 
 			$connector_out['plugin'] = array(
 				'file'        => $file,
