@@ -3,18 +3,34 @@
  * Validate recommended versions for dependencies referenced in `readme.html`,
  * based on external site support pages.
  *
- * @group external-http
+ * @group readme
  */
 class Tests_Readme extends WP_UnitTestCase {
 
 	/**
+	 * Tests that readme.html contains valid recommended versions for PHP, MySQL, and MariaDB.
+	 *
+	 * @ticket 63914
+	 *
 	 * @coversNothing
 	 */
-	public function test_readme_php_version() {
-		$this->markTestSkipped(
-			'Temporarily disabled. Test should be re-enabled once WordPress is fully compatible with PHP 8.0+.'
-		);
+	public function test_readme_contains_recommended_versions() {
+		$readme = file_get_contents( ABSPATH . 'readme.html' );
+		$this->assertIsString( $readme, 'readme.html should exist and be readable.' );
 
+		$this->assertSame( 1, preg_match( '#Recommendations.*PHP</a> version <strong>([0-9.]+)#s', $readme ), 'readme.html should declare a recommended PHP version.' );
+
+		$this->assertSame( 1, preg_match( '#Recommendations.*MySQL</a> version <strong>([0-9.]+)#s', $readme ), 'readme.html should declare a recommended MySQL version.' );
+
+		$this->assertSame( 1, preg_match( '#Recommendations.*MariaDB</a> version <strong>([0-9.]+)#s', $readme ), 'readme.html should declare a recommended MariaDB version.' );
+	}
+
+	/**
+	 * @coversNothing
+	 *
+	 * @group external-http
+	 */
+	public function test_readme_php_version() {
 		// This test is designed to only run on trunk.
 		$this->skipOnAutomatedBranches();
 
@@ -24,13 +40,15 @@ class Tests_Readme extends WP_UnitTestCase {
 
 		$response_body = $this->get_response_body( 'https://www.php.net/supported-versions.php' );
 
-		preg_match_all( '#<tr class="stable">\s*<td>\s*<a [^>]*>\s*([0-9.]*)#s', $response_body, $php_matches );
+		preg_match_all( '#<tr class="(?:stable|security)">\s*<td>\s*<a [^>]*>\s*([0-9.]*)#s', $response_body, $php_matches );
 
 		$this->assertContains( $matches[1], $php_matches[1], "readme.html's Recommended PHP version is too old. Remember to update the WordPress.org Requirements page, too." );
 	}
 
 	/**
 	 * @coversNothing
+	 *
+	 * @group external-http
 	 */
 	public function test_readme_mysql_version() {
 		// This test is designed to only run on trunk.
@@ -40,10 +58,15 @@ class Tests_Readme extends WP_UnitTestCase {
 
 		preg_match( '#Recommendations.*MySQL</a> version <strong>([0-9.]*)#s', $readme, $matches );
 
-		$response_body = $this->get_response_body( "https://dev.mysql.com/doc/relnotes/mysql/{$matches[1]}/en/" );
+		$response_body = json_decode( $this->get_response_body( 'https://endoflife.date/api/mysql.json' ) );
+		$eol_date      = '';
 
-		// Retrieve the date of the first GA release for the recommended branch.
-		preg_match( '#.*(\d{4}-\d{2}-\d{2}), General Availability#s', $response_body, $mysql_matches );
+		foreach ( $response_body as $version ) {
+			if ( $version->cycle === $matches[1] && false !== $version->eol ) {
+				$eol_date = $version->eol;
+				break;
+			}
+		}
 
 		/*
 		 * Per https://www.mysql.com/support/, Oracle actively supports MySQL releases for 5 years from GA release.
@@ -54,7 +77,7 @@ class Tests_Readme extends WP_UnitTestCase {
 		 *
 		 * TODO: Reduce this back to 5 years once MySQL 8.1 compatibility is achieved.
 		 */
-		$mysql_eol    = gmdate( 'Y-m-d', strtotime( $mysql_matches[1] . ' +8 years' ) );
+		$mysql_eol    = gmdate( 'Y-m-d', strtotime( $eol_date . ' +8 years' ) );
 		$current_date = gmdate( 'Y-m-d' );
 
 		$this->assertLessThan( $mysql_eol, $current_date, "readme.html's Recommended MySQL version is too old. Remember to update the WordPress.org Requirements page, too." );
@@ -62,6 +85,8 @@ class Tests_Readme extends WP_UnitTestCase {
 
 	/**
 	 * @coversNothing
+	 *
+	 * @group external-http
 	 */
 	public function test_readme_mariadb_version() {
 		// This test is designed to only run on trunk.
