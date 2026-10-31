@@ -51,6 +51,17 @@ class Tests_Link_GetBoundaryPost extends WP_UnitTestCase {
 	/**
 	 * @ticket 22957
 	 */
+	public function test_should_return_null_for_in_same_term_without_current_post() {
+		// Navigate to a search results page with no matches, so there is no current post.
+		$this->go_to( home_url( '/?s=no-matching-posts' ) );
+		$this->assertNull( get_post(), 'This test should be running without a current post.' );
+
+		$this->assertNull( get_boundary_post( true ) );
+	}
+
+	/**
+	 * @ticket 22957
+	 */
 	public function test_should_still_work_on_single_pages() {
 		// Navigate to a single post page.
 		$this->go_to( get_permalink( self::$post_ids['middle'] ) );

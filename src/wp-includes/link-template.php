@@ -2215,6 +2215,10 @@ function get_boundary_post( $in_same_term = false, $excluded_terms = '', $start 
 
 	$post = get_post();
 
+	if ( $in_same_term && ! $post ) {
+		return null;
+	}
+
 	$query_args = array(
 		'posts_per_page'         => 1,
 		'order'                  => $start ? 'ASC' : 'DESC',
